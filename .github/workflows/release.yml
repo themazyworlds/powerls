@@ -4,33 +4,71 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch: # This allows to manually trigger the build anytime!
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.2.2
+      
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build g++ debhelper dh-make devscripts
+        
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        
       - name: Build
         run: cmake --build build
+        
       - name: Package portable tarball
         run: |
           mkdir -p dist/bin
           install -m 0755 build/powerls dist/bin/powerls
-          install -m 0755 install.sh dist/install.sh
+          install -m 0755 packaging/arch/install.sh dist/install.sh 
           tar -czf powerls-linux-x86_64.tar.gz -C dist .
+          
       - name: Package Debian package
         run: |
           dpkg-buildpackage -us -uc -b
-          cp ../powerls_1.0-1_*.deb .
+          cp ../*.deb .
+          
       - name: Upload release assets
         uses: softprops/action-gh-release@v2.0.0
         with:
           files: |
             powerls-linux-x86_64.tar.gz
-            powerls_1.0-1_*.deb
+            *.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to AUR
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          # 1. Initialize the secure SSH environment
+          mkdir -p ~/.ssh
+          ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts
+          eval $(ssh-agent -s)
+          echo "$AUR_SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+          
+          # 2. Clone the downstream AUR package target repository
+          git clone ssh://aur@aur.archlinux.org/powerls.git aur-publish-dir
+          cd aur-publish-dir
+          
+          # 3. Configure a clean git identity for the build runner
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 4. Pull down the clean blueprints from your master workspace path
+          cp ../packaging/arch/powerls/PKGBUILD .
+          cp ../packaging/arch/powerls/.SRCINFO .
+          
+          # 5. Commit and push directly to the Arch Linux production servers
+          git add PKGBUILD .SRCINFO
+          
+          # Only commit and push if structural modifications are detected
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "ci: automated deployment sync for version ${{ github.ref_name }}"
+            git push origin master
+          fi
