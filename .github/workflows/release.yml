@@ -25,7 +25,7 @@ jobs:
         run: |
           mkdir -p dist/bin
           install -m 0755 build/powerls dist/bin/powerls
-          install -m 0755 packaging/arch/install.sh dist/install.sh 
+          # The missing install.sh line has been removed completely
           tar -czf powerls-linux-x86_64.tar.gz -C dist .
           
       - name: Package Debian package
