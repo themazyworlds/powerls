@@ -2,6 +2,8 @@
 
 A colorful terminal directory explorer written in C++20, providing a more refined and optimized alternative to the classic `ls` command on Linux.
 
+![image](images/visual.png)
+
 ## Project Structure
 
 - [src/main.cpp](src/main.cpp) — Application entry point.
