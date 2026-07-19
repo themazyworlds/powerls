@@ -46,7 +46,6 @@ If you want to manually test the Arch packaging blueprints locally from the repo
 
 ```bash
 makepkg -si -p packaging/arch/PKGBUILD
-```
 
 ## Packaging Layout
 

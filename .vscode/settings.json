@@ -2,6 +2,7 @@
     "cSpell.ignoreWords": [
         "DCMAKE",
         "PKGBUILD",
+        "SRCINFO",
         "buildpackage",
         "debhelper",
         "devscripts",
@@ -11,5 +12,10 @@
         "run",
         "softprops",
         "tscn"
+    ],
+    "cSpell.words": [
+        "archlinux",
+        "makepkg",
+        "paru"
     ]
 }
