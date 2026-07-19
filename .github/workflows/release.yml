@@ -1,0 +1,36 @@
+name: Build and release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build g++ debhelper dh-make devscripts
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build
+      - name: Package portable tarball
+        run: |
+          mkdir -p dist/bin
+          install -m 0755 build/powerls dist/bin/powerls
+          install -m 0755 install.sh dist/install.sh
+          tar -czf powerls-linux-x86_64.tar.gz -C dist .
+      - name: Package Debian package
+        run: |
+          dpkg-buildpackage -us -uc -b
+          cp ../powerls_1.0-1_*.deb .
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2.0.0
+        with:
+          files: |
+            powerls-linux-x86_64.tar.gz
+            powerls_1.0-1_*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

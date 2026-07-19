@@ -1,1 +1,7 @@
 build/
+build-release/
+src/build/
+pkg/
+.deb-staging/
+*.pkg.tar.zst
+*.deb

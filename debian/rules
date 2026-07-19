@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_configure:
+	cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+override_dh_auto_build:
+	cmake --build build
+
+override_dh_auto_install:
+	cmake --install build --prefix debian/powerls/usr

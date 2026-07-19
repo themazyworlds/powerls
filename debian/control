@@ -1,0 +1,12 @@
+Source: powerls
+Section: utils
+Priority: optional
+Maintainer: Your Name <you@example.com>
+Build-Depends: cmake, g++, ninja-build, debhelper-compat (= 13)
+Standards-Version: 4.1.5
+Homepage: https://github.com/themazyworlds/powerls
+
+Package: powerls
+Architecture: any
+Depends: ${misc:Depends}
+Description: A colorful terminal directory explorer written in C++20

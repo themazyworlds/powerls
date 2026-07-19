@@ -1,7 +1,15 @@
 {
     "cSpell.ignoreWords": [
+        "DCMAKE",
+        "PKGBUILD",
+        "buildpackage",
+        "debhelper",
+        "devscripts",
+        "dpkg",
         "flac",
         "powerls",
+        "run",
+        "softprops",
         "tscn"
     ]
 }

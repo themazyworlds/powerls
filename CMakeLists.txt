@@ -6,4 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Define the final executable name and its source file
-add_executable(powerls main.cpp)
+add_executable(powerls src/main.cpp)
+
+# Install the binary to the standard bin directory
+install(TARGETS powerls RUNTIME DESTINATION bin)
