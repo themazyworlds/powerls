@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4
       
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build g++ debhelper dh-make devscripts
@@ -37,7 +37,7 @@ jobs:
           cp ../*.deb .
           
       - name: Upload release assets
-        uses: softprops/action-gh-release@v2.0.0
+        uses: softprops/action-gh-release@v3
         with:
           # 💡 FIX 2: Forces the manual runner to target your existing release tag
           tag_name: v1.0.0  
