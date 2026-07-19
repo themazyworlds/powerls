@@ -4,7 +4,11 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch: # This allows to manually trigger the build anytime!
+  workflow_dispatch: # Allows manual trigger via the Actions tab
+
+# 💡 FIX 1: Explicitly grant write permissions so GitHub allows asset uploads
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -25,19 +29,18 @@ jobs:
         run: |
           mkdir -p dist/bin
           install -m 0755 build/powerls dist/bin/powerls
-          # The missing install.sh line has been removed completely
           tar -czf powerls-linux-x86_64.tar.gz -C dist .
           
       - name: Package Debian package
         run: |
-          # Runs standard verification cleanly now that build-essential is present
           dpkg-buildpackage -us -uc -b
           cp ../*.deb .
           
       - name: Upload release assets
         uses: softprops/action-gh-release@v2.0.0
         with:
-          tag_name: v1.0.0
+          # 💡 FIX 2: Forces the manual runner to target your existing release tag
+          tag_name: v1.0.0  
           files: |
             powerls-linux-x86_64.tar.gz
             *.deb
