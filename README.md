@@ -1,7 +1,6 @@
 # powerls
 A more refined version of ls on linux
 
-<<<<<<< HEAD
 ## Project structure
 
 - [src/main.cpp](src/main.cpp): application entry point
@@ -59,6 +58,3 @@ AUR packages should primarily provide the user-facing runtime binary. A separate
 
 A release workflow is included in [.github/workflows/release.yml](.github/workflows/release.yml) that builds a portable tar.gz archive for Linux x86_64 on tag pushes.
 
-=======
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/9b9a8e4a-94f9-415f-9867-8c7f93889fb3" />
->>>>>>> 89bdc022a072c1d3940482d973dc6fa7ed8e5e4d
