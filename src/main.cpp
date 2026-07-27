@@ -31,7 +31,6 @@ struct Options
     ColorMode color_mode = ColorMode::Auto;
     IconMode  icon_mode  = IconMode::Nerd;
     BoxMode   box_mode   = BoxMode::Utf8;
-    bool      boxed      = false; // Default: Minimal UI
     std::string target_path = "";
     bool show_help = false;
     bool show_version = false;
@@ -868,7 +867,6 @@ static void printHelp(const char *prog)
               << "Options:\n"
               << "  -h, --help            Show this help message and exit\n"
               << "  -v, --version         Show program version\n"
-              << "  --boxed               Use boxed frame UI layout (classic mode)\n"
               << "  --color[=WHEN]        Control colored output: 'auto', 'always', 'never'\n"
               << "  --no-color            Disable colors (same as --color=never)\n"
               << "  --icons[=MODE]        Control icons: 'nerd', 'unicode', 'none'\n"
@@ -895,10 +893,6 @@ static Options parseArgs(int argc, char *argv[])
         {
             opts.show_version = true;
             return opts;
-        }
-        else if (arg == "--boxed")
-        {
-            opts.boxed = true;
         }
         else if (arg == "--no-color")
         {
@@ -1058,61 +1052,29 @@ int main(int argc, char *argv[])
         try { mass = formatSize(fs::file_size(target)); } catch (...) {}
         std::string type_label = file_info.type;
 
-        if (opts.boxed)
+        // MINIMAL DESIGN
+        std::cout << "\n";
+        std::string icon_str = main_icon.empty() ? "" : (main_color + main_icon + " " + t.RESET);
+        std::cout << "  " << icon_str << t.BOLD << t.WHITE << target_name << t.RESET;
+        if (!badge_row.empty()) std::cout << "   " << badge_row;
+        std::cout << "\n\n";
+
+        const int LW = 11;
+        auto row = [&](const std::string &label, const std::string &value)
         {
-            int box_width = std::max(40, tw - 2);
-            std::cout << "\n";
-            std::cout << t.ACCENT << " " << box.tl << hRule(box_width - 2, t, box) << t.ACCENT << box.tr << t.RESET << "\n";
-            std::string icon_str = main_icon.empty() ? "" : (main_color + main_icon + " " + t.RESET);
-            std::cout << t.ACCENT << " " << box.vl << "  " << t.RESET
-                      << icon_str << t.BOLD << t.WHITE << truncateDisplayWidth(target_name, tw - 25, box.ellipsis) << t.RESET
-                      << "   " << badge_row << "\n";
-            std::cout << t.ACCENT << " " << box.vl << "  " << t.RESET
-                      << t.DIM << truncateDisplayWidth(breadcrumb(fs::absolute(target), t), tw - 10, box.ellipsis) << t.RESET << "\n";
-            std::cout << t.ACCENT << " " << box.ml << hRule(box_width - 2, t, box) << t.ACCENT << box.mr << t.RESET << "\n";
+            std::cout << "  " << t.DIM_MID << std::left << std::setw(LW) << label << t.RESET
+                      << value << "\n";
+        };
 
-            const int LW = 10;
-            auto row = [&](const std::string &icol, const std::string &icon, const std::string &label, const std::string &value)
-            {
-                std::string ic = (opts.icon_mode == IconMode::None || icon.empty()) ? "" : (icon + " ");
-                std::cout << t.ACCENT << " " << box.vl << "  " << t.RESET
-                          << icol << ic << t.RESET << t.DIM_MID << std::left << std::setw(LW) << label << t.RESET
-                          << value << "\n";
-            };
-
-            row(t.LBLUE,  (opts.icon_mode == IconMode::Unicode ? "📁" : "󰉋"), "Path",    t.DIM_MID + truncateDisplayWidth(parent_path, tw - 20, box.ellipsis) + t.RESET);
-            row(t.CYAN,   (opts.icon_mode == IconMode::Unicode ? "🔒" : "󰌾"), "Perms",   t.WHITE + "u:" + t.RESET + u_col + t.DIM + "  g:" + t.RESET + g_col + t.DIM + "  o:" + t.RESET + o_col);
-            row(t.ROSE,   (opts.icon_mode == IconMode::Unicode ? "📦" : "󰋊"), "Size",   t.WHITE + mass + t.RESET);
-            row(t.YELLOW, (opts.icon_mode == IconMode::Unicode ? "⚙️" : "󰏖"), "Kind",   t.WHITE + type_label + t.RESET);
-            try { auto mod = fs::last_write_time(target); row(t.MINT, (opts.icon_mode == IconMode::Unicode ? "🕒" : "󰞱"), "Modified", t.WHITE + formatTime(mod) + t.RESET); } catch (...) {}
-            std::cout << t.ACCENT << " " << box.bl << hRule(box_width - 2, t, box) << t.ACCENT << box.br << t.RESET << "\n\n";
-        }
-        else
-        {
-            // MINIMAL DESIGN
-            std::cout << "\n";
-            std::string icon_str = main_icon.empty() ? "" : (main_color + main_icon + " " + t.RESET);
-            std::cout << "  " << icon_str << t.BOLD << t.WHITE << target_name << t.RESET;
-            if (!badge_row.empty()) std::cout << "   " << badge_row;
-            std::cout << "\n\n";
-
-            const int LW = 11;
-            auto row = [&](const std::string &label, const std::string &value)
-            {
-                std::cout << "  " << t.DIM_MID << std::left << std::setw(LW) << label << t.RESET
-                          << value << "\n";
-            };
-
-            row("Path",     t.WHITE + parent_path + t.RESET);
-            row("Perms",    t.WHITE + "u:" + t.RESET + u_col + t.DIM + "  g:" + t.RESET + g_col + t.DIM + "  o:" + t.RESET + o_col + t.DIM + "  (" + permsToOctal(perms) + ")" + t.RESET);
-            row("Size",     t.WHITE + mass + t.RESET);
-            row("Kind",     t.WHITE + type_label + t.RESET);
-            try {
-                auto mod = fs::last_write_time(target);
-                row("Modified", t.WHITE + formatTime(mod) + t.RESET);
-            } catch (...) {}
-            std::cout << "\n";
-        }
+        row("Path",     t.WHITE + parent_path + t.RESET);
+        row("Perms",    t.WHITE + "u:" + t.RESET + u_col + t.DIM + "  g:" + t.RESET + g_col + t.DIM + "  o:" + t.RESET + o_col + t.DIM + "  (" + permsToOctal(perms) + ")" + t.RESET);
+        row("Size",     t.WHITE + mass + t.RESET);
+        row("Kind",     t.WHITE + type_label + t.RESET);
+        try {
+            auto mod = fs::last_write_time(target);
+            row("Modified", t.WHITE + formatTime(mod) + t.RESET);
+        } catch (...) {}
+        std::cout << "\n";
         return 0;
     }
 
@@ -1192,196 +1154,91 @@ int main(int argc, char *argv[])
     std::string git_branch = getGitBranch(abs_path);
     std::string git_str = git_branch.empty() ? "" : (t.PEACH + (opts.icon_mode == IconMode::Unicode ? "🌿 " : (opts.icon_mode == IconMode::Nerd ? "󰊢 " : "git:")) + git_branch + t.RESET + "  ");
 
-    if (opts.boxed)
+    // MODERN MINIMAL UI
+    std::cout << "\n";
+    std::cout << "  " << dir_icon_str << breadcrumb(abs_path, t);
+    if (!git_str.empty()) std::cout << "   " << git_str;
+    if (!badge_row.empty()) std::cout << "  " << badge_row;
+    std::cout << "\n\n";
+
+    if (!dirs_list.empty())
     {
-        // CLASSIC BOXED UI
-        int box_width = std::max(40, tw - 2);
-        std::cout << "\n";
-        std::cout << t.ACCENT << " " << box.tl << hRule(box_width - 2, t, box) << t.ACCENT << box.tr << t.RESET << "\n";
-        std::cout << t.ACCENT << " " << box.vl << "  " << t.RESET
-                  << dir_icon_str
-                  << t.BOLD << t.WHITE << truncateDisplayWidth(dir_name, tw - 25, box.ellipsis) << t.RESET
-                  << "   " << badge_row << "\n";
-        std::cout << t.ACCENT << " " << box.vl << "  " << t.RESET
-                  << t.DIM << truncateDisplayWidth(breadcrumb(abs_path, t), tw - 10, box.ellipsis) << t.RESET << "\n";
-        std::cout << t.ACCENT << " " << box.ml << hRule(box_width - 2, t, box) << t.ACCENT << box.mr << t.RESET << "\n";
-
-        if (!dirs_list.empty())
-        {
-            std::cout << t.ACCENT << " " << box.vl << t.RESET
-                      << "  " << t.DIM << "  Directories" << t.RESET << "\n";
-        }
-
-        for (const auto &entry : entries)
-        {
-            bool isDir  = entry.is_directory();
-            bool isLast = (index + 1 == total);
-            if (!isDir && index == dirs_list.size() && !dirs_list.empty() && !files_list.empty())
-            {
-                std::cout << t.ACCENT << " " << box.vl << t.RESET << "\n";
-                std::cout << t.ACCENT << " " << box.vl << t.RESET
-                          << "  " << t.DIM << "  Files" << t.RESET << "\n";
-            }
-
-            std::string branch = isLast ? (t.CHROME + box.branch_last + t.RESET)
-                                        : (t.CHROME + box.branch_mid + t.RESET);
-            index++;
-
-            FileTypeInfo info = registry.getInfo(entry.path());
-            std::string main_icon  = getIconStr(info, opts.icon_mode);
-            std::string main_color = getColor(t, info.color_name);
-
-            if (isDir) folders++;
-            else       files++;
-
-            std::string raw_name = entry.path().filename().string();
-            bool hidden = (!raw_name.empty() && raw_name[0] == '.');
-
-            std::string truncated_name = truncateDisplayWidth(raw_name, maxNameLen, box.ellipsis);
-            size_t name_disp_w = displayWidth(truncated_name);
-            size_t pad = (name_disp_w < maxNameLen) ? (maxNameLen - name_disp_w) : 0;
-
-            std::string name_col;
-            if (isDir) name_col = main_color + t.BOLD + truncated_name + t.RESET;
-            else if (hidden) name_col = t.DIM + truncated_name + t.RESET;
-            else name_col = t.WHITE + truncated_name + t.RESET;
-
-            std::string icon_prefix = main_icon.empty() ? "" : (main_color + main_icon + " " + t.RESET);
-
-            std::vector<Badge> raw_item_badges = getItemBadges(entry.path(), registry);
-            std::vector<Badge> unique_item_badges = isDir ? getUniqueItemBadges(raw_item_badges, inherited_badges) : raw_item_badges;
-            std::string item_badge_str;
-            for (const auto &ub : unique_item_badges)
-                item_badge_str += "  " + pill(ub, t, opts.icon_mode);
-
-            std::cout << t.ACCENT << " " << box.vl << t.RESET << branch
-                      << icon_prefix << name_col << std::string(pad + 2, ' ');
-
-            if (isDir)
-            {
-                try {
-                    auto [sf, ff] = countEntries(entry.path());
-                    size_t tot = sf + ff;
-                    std::string cnt = (tot > 0) ? std::to_string(tot) + (tot == 1 ? " item" : " items") : "empty";
-                    std::cout << t.DIM << std::left << std::setw(9) << cnt << t.RESET;
-                } catch (...) { std::cout << std::string(9, ' '); }
-                std::cout << "      "; // 6 spaces placeholder -> total 15 cols
-            }
-            else
-            {
-                std::string size_str = "—";
-                uintmax_t fsize = 0;
-                try { fsize = fs::file_size(entry); totalSize += fsize; size_str = formatSize(fsize); } catch (...) {}
-                std::cout << t.DIM_MID << std::right << std::setw(8) << size_str << t.RESET
-                          << " " << sizeBar(fsize, maxSize, t, box) << " "; // 8 + 1 + 5 + 1 = 15 cols
-            }
-
-            try {
-                auto mod = fs::last_write_time(entry);
-                std::cout << t.DIM << formatTime(mod) << t.RESET;
-            } catch (...) {}
-
-            std::cout << item_badge_str;
-            std::cout << "\n";
-        }
-
-        std::cout << t.ACCENT << " " << box.ml << hRule(box_width - 2, t, box) << t.ACCENT << box.mr << t.RESET << "\n";
-        std::cout << t.ACCENT << " " << box.vl << "  " << t.RESET
-                  << t.DIM_MID << folders << " folders" << t.RESET << t.DIM << "  ·  " << t.RESET
-                  << t.DIM_MID << files << " files" << t.RESET;
-        if (totalSize > 0) std::cout << t.DIM << "  ·  " << t.RESET << t.DIM_MID << formatSize(totalSize) << " total" << t.RESET;
-        if (hidden_count > 0) std::cout << t.DIM << "  ·  " << t.RESET << t.DIM << hidden_count << " hidden" << t.RESET;
-        std::cout << "\n";
-        std::cout << t.ACCENT << " " << box.bl << hRule(box_width - 2, t, box) << t.ACCENT << box.br << t.RESET << "\n\n";
+        std::cout << "  " << t.DIM << "Directories" << t.RESET << "\n";
     }
-    else
+
+    for (const auto &entry : entries)
     {
-        // MODERN MINIMAL UI
-        std::cout << "\n";
-        std::cout << "  " << dir_icon_str << breadcrumb(abs_path, t);
-        if (!git_str.empty()) std::cout << "   " << git_str;
-        if (!badge_row.empty()) std::cout << "  " << badge_row;
-        std::cout << "\n\n";
-
-        if (!dirs_list.empty())
+        bool isDir = entry.is_directory();
+        if (!isDir && index == dirs_list.size() && !dirs_list.empty() && !files_list.empty())
         {
-            std::cout << "  " << t.DIM << "Directories" << t.RESET << "\n";
+            std::cout << "\n  " << t.DIM << "Files" << t.RESET << "\n";
         }
+        index++;
 
-        for (const auto &entry : entries)
+        FileTypeInfo info = registry.getInfo(entry.path());
+        std::string main_icon  = getIconStr(info, opts.icon_mode);
+        std::string main_color = getColor(t, info.color_name);
+
+        if (isDir) folders++;
+        else       files++;
+
+        std::string raw_name = entry.path().filename().string();
+        bool hidden = (!raw_name.empty() && raw_name[0] == '.');
+
+        std::string truncated_name = truncateDisplayWidth(raw_name, maxNameLen, box.ellipsis);
+        size_t name_disp_w = displayWidth(truncated_name);
+        size_t pad = (name_disp_w < maxNameLen) ? (maxNameLen - name_disp_w) : 0;
+
+        std::string name_col;
+        if (isDir) name_col = main_color + t.BOLD + truncated_name + t.RESET;
+        else if (hidden) name_col = t.DIM + truncated_name + t.RESET;
+        else name_col = t.WHITE + truncated_name + t.RESET;
+
+        std::string icon_prefix = main_icon.empty() ? "" : (main_color + main_icon + " " + t.RESET);
+
+        std::vector<Badge> raw_item_badges = getItemBadges(entry.path(), registry);
+        std::vector<Badge> unique_item_badges = isDir ? getUniqueItemBadges(raw_item_badges, inherited_badges) : raw_item_badges;
+        std::string item_badge_str;
+        for (const auto &ub : unique_item_badges)
+            item_badge_str += "  " + pill(ub, t, opts.icon_mode);
+
+        std::cout << "  " << icon_prefix
+                  << name_col << std::string(pad + 2, ' ');
+
+        if (isDir)
         {
-            bool isDir = entry.is_directory();
-            if (!isDir && index == dirs_list.size() && !dirs_list.empty() && !files_list.empty())
-            {
-                std::cout << "\n  " << t.DIM << "Files" << t.RESET << "\n";
-            }
-            index++;
-
-            FileTypeInfo info = registry.getInfo(entry.path());
-            std::string main_icon  = getIconStr(info, opts.icon_mode);
-            std::string main_color = getColor(t, info.color_name);
-
-            if (isDir) folders++;
-            else       files++;
-
-            std::string raw_name = entry.path().filename().string();
-            bool hidden = (!raw_name.empty() && raw_name[0] == '.');
-
-            std::string truncated_name = truncateDisplayWidth(raw_name, maxNameLen, box.ellipsis);
-            size_t name_disp_w = displayWidth(truncated_name);
-            size_t pad = (name_disp_w < maxNameLen) ? (maxNameLen - name_disp_w) : 0;
-
-            std::string name_col;
-            if (isDir) name_col = main_color + t.BOLD + truncated_name + t.RESET;
-            else if (hidden) name_col = t.DIM + truncated_name + t.RESET;
-            else name_col = t.WHITE + truncated_name + t.RESET;
-
-            std::string icon_prefix = main_icon.empty() ? "" : (main_color + main_icon + " " + t.RESET);
-
-            std::vector<Badge> raw_item_badges = getItemBadges(entry.path(), registry);
-            std::vector<Badge> unique_item_badges = isDir ? getUniqueItemBadges(raw_item_badges, inherited_badges) : raw_item_badges;
-            std::string item_badge_str;
-            for (const auto &ub : unique_item_badges)
-                item_badge_str += "  " + pill(ub, t, opts.icon_mode);
-
-            std::cout << "  " << icon_prefix
-                      << name_col << std::string(pad + 2, ' ');
-
-            if (isDir)
-            {
-                try {
-                    auto [sf, ff] = countEntries(entry.path());
-                    size_t tot = sf + ff;
-                    std::string cnt = (tot > 0) ? std::to_string(tot) + (tot == 1 ? " item" : " items") : "empty";
-                    std::cout << t.DIM << std::left << std::setw(9) << cnt << t.RESET;
-                } catch (...) { std::cout << std::string(9, ' '); }
-                std::cout << "      "; // 6 spaces placeholder -> total 15 cols
-            }
-            else
-            {
-                std::string size_str = "—";
-                uintmax_t fsize = 0;
-                try { fsize = fs::file_size(entry); totalSize += fsize; size_str = formatSize(fsize); } catch (...) {}
-                std::cout << t.DIM_MID << std::right << std::setw(8) << size_str << t.RESET
-                          << " " << sizeBar(fsize, maxSize, t, box) << " "; // 8 + 1 + 5 + 1 = 15 cols
-            }
-
             try {
-                auto mod = fs::last_write_time(entry);
-                std::cout << t.DIM << formatTime(mod) << t.RESET;
-            } catch (...) {}
-
-            std::cout << item_badge_str;
-            std::cout << "\n";
+                auto [sf, ff] = countEntries(entry.path());
+                size_t tot = sf + ff;
+                std::string cnt = (tot > 0) ? std::to_string(tot) + (tot == 1 ? " item" : " items") : "empty";
+                std::cout << t.DIM << std::left << std::setw(9) << cnt << t.RESET;
+            } catch (...) { std::cout << std::string(9, ' '); }
+            std::cout << "      "; // 6 spaces placeholder -> total 15 cols
+        }
+        else
+        {
+            std::string size_str = "—";
+            uintmax_t fsize = 0;
+            try { fsize = fs::file_size(entry); totalSize += fsize; size_str = formatSize(fsize); } catch (...) {}
+            std::cout << t.DIM_MID << std::right << std::setw(8) << size_str << t.RESET
+                      << " " << sizeBar(fsize, maxSize, t, box) << " "; // 8 + 1 + 5 + 1 = 15 cols
         }
 
-        std::cout << "\n  " << t.DIM
-                  << folders << " " << (folders == 1 ? "folder" : "folders") << " · "
-                  << files << " " << (files == 1 ? "file" : "files");
-        if (totalSize > 0) std::cout << " · " << formatSize(totalSize) << " total";
-        if (hidden_count > 0) std::cout << " · " << hidden_count << " hidden";
-        std::cout << t.RESET << "\n\n";
+        try {
+            auto mod = fs::last_write_time(entry);
+            std::cout << t.DIM << formatTime(mod) << t.RESET;
+        } catch (...) {}
+
+        std::cout << item_badge_str;
+        std::cout << "\n";
     }
+
+    std::cout << "\n  " << t.DIM
+              << folders << " " << (folders == 1 ? "folder" : "folders") << " · "
+              << files << " " << (files == 1 ? "file" : "files");
+    if (totalSize > 0) std::cout << " · " << formatSize(totalSize) << " total";
+    if (hidden_count > 0) std::cout << " · " << hidden_count << " hidden";
+    std::cout << t.RESET << "\n\n";
 
     return 0;
 }

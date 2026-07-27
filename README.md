@@ -27,7 +27,7 @@ If you are installing the compiled binary manually or downloading it directly fr
 
 ```bash
 mkdir -p ~/.local/bin
-install -m 0755 build/powerls ~/.local/bin/powerls
+install -m 0755 build/pls ~/.local/bin/pls
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
