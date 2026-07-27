@@ -981,7 +981,7 @@ int main(int argc, char *argv[])
     }
     if (opts.show_version)
     {
-        std::cout << "powerls version 1.5.0\n";
+        std::cout << "powerls version 1.1.0\n";
         return 0;
     }
 
