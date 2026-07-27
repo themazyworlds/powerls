@@ -194,6 +194,17 @@ static std::string pill(const Badge &b, const Theme &t, IconMode icon_mode)
 // ---------------------------------------------------------
 // FILE TYPES & ASSOCIATIONS DATA STRUCTURE
 // ---------------------------------------------------------
+static bool isImageName(const std::string &s)
+{
+    return s == "image" || s == "images" ||
+           s == "img" || s == "imgs" ||
+           s == "screenshot" || s == "screenshots" ||
+           s == "picture" || s == "pictures" ||
+           s == "photo" || s == "photos" ||
+           s == "pic" || s == "pics" ||
+           s == "icon" || s == "icons";
+}
+
 struct FileTypeInfo
 {
     std::string type;
@@ -345,7 +356,7 @@ public:
             if (it != dir_map.end()) return it->second;
 
             // Pattern checks for directory names
-            if (fn_lower.find("image") != std::string::npos || fn_lower.find("img") != std::string::npos || fn_lower.find("pic") != std::string::npos)
+            if (isImageName(fn_lower))
                 return {"Image", "󰋩", "🖼️", "[IMG]", "ROSE"};
             if (fn_lower.find("github") != std::string::npos)
                 return {"GitHub", "󰊤", "🐙", "[GH]", "VIOLET"};
@@ -372,7 +383,7 @@ public:
         // Pattern checks for exact filenames
         if (fn_lower.find("github") != std::string::npos)
             return {"GitHub", "󰊤", "🐙", "[GH]", "VIOLET"};
-        if (fn_lower.find("image") != std::string::npos || fn_lower.find("img") != std::string::npos || fn_lower.find("icon") != std::string::npos)
+        if (isImageName(fn_lower))
             return {"Image", "󰋩", "🖼️", "[IMG]", "ROSE"};
         if (fn_lower.find("docker") != std::string::npos)
             return {"Docker", "󰡨", "🐳", "[DOCK]", "BLUE"};
@@ -475,7 +486,7 @@ static std::vector<Badge> getInheritedBadges(const fs::path &target_path)
             badges.push_back({"󰙨", "🧪", "[TEST]", "Test", "VIOLET"});
         else if (fn_lower == "doc" || fn_lower == "docs")
             badges.push_back({"󰈙", "📘", "[DOC]", "Docs", "BLUE"});
-        else if (fn_lower == "images" || fn_lower == "img" || fn_lower == "pictures")
+        else if (isImageName(fn_lower))
             badges.push_back({"󰋩", "🖼️", "[IMG]", "Image", "ROSE"});
     }
 
@@ -519,7 +530,7 @@ static std::vector<Badge> getItemBadges(const fs::path &item_path, const FileTyp
         return fn_lower.find(sub) != std::string::npos;
     };
 
-    if (contains("image") || contains("img") || contains("picture") || contains("photo") || contains("pic") || contains("icon"))
+    if (isImageName(fn_lower))
         badges.push_back({"󰋩", "🖼️", "[IMG]", "Image", "ROSE"});
     if (contains("github"))
         badges.push_back({"󰊤", "🐙", "[GH]", "GitHub", "VIOLET"});
@@ -1238,7 +1249,7 @@ int main(int argc, char *argv[])
             std::string icon_prefix = main_icon.empty() ? "" : (main_color + main_icon + " " + t.RESET);
 
             std::vector<Badge> raw_item_badges = getItemBadges(entry.path(), registry);
-            std::vector<Badge> unique_item_badges = getUniqueItemBadges(raw_item_badges, inherited_badges);
+            std::vector<Badge> unique_item_badges = isDir ? getUniqueItemBadges(raw_item_badges, inherited_badges) : raw_item_badges;
             std::string item_badge_str;
             for (const auto &ub : unique_item_badges)
                 item_badge_str += "  " + pill(ub, t, opts.icon_mode);
@@ -1328,7 +1339,7 @@ int main(int argc, char *argv[])
             std::string icon_prefix = main_icon.empty() ? "" : (main_color + main_icon + " " + t.RESET);
 
             std::vector<Badge> raw_item_badges = getItemBadges(entry.path(), registry);
-            std::vector<Badge> unique_item_badges = getUniqueItemBadges(raw_item_badges, inherited_badges);
+            std::vector<Badge> unique_item_badges = isDir ? getUniqueItemBadges(raw_item_badges, inherited_badges) : raw_item_badges;
             std::string item_badge_str;
             for (const auto &ub : unique_item_badges)
                 item_badge_str += "  " + pill(ub, t, opts.icon_mode);
