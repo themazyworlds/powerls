@@ -12,7 +12,7 @@ mkdir -p "$BUILD_DIR" "$STAGE_DIR/DEBIAN" "$STAGE_DIR/usr/bin"
 cmake -S "$ROOT_DIR" -B "$BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Release >/dev/null
 cmake --build "$BUILD_DIR" >/dev/null
 
-install -m 0755 "$BUILD_DIR/powerls" "$STAGE_DIR/usr/bin/powerls"
+install -m 0755 "$BUILD_DIR/pls" "$STAGE_DIR/usr/bin/pls"
 
 cat > "$STAGE_DIR/DEBIAN/control" <<'EOF'
 Package: powerls

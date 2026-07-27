@@ -31,8 +31,8 @@ jobs:
       - name: Package portable tarball
         run: |
           mkdir -p dist/bin
-          install -m 0755 build/powerls dist/bin/powerls
-          tar -czf powerls-linux-x86_64.tar.gz -C dist .
+          install -m 0755 build/pls dist/bin/pls
+          tar -czf pls-linux-x86_64.tar.gz -C dist .
           
       - name: Package Debian package
         run: |
@@ -45,7 +45,7 @@ jobs:
           # 💡 DYNAMIC FIX: Uses your manual input version, or automatically grabs the Git Tag!
           tag_name: ${{ github.event.inputs.release_version || github.ref_name }}
           files: |
-            powerls-linux-x86_64.tar.gz
+            pls-linux-x86_64.tar.gz
             *.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

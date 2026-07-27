@@ -852,7 +852,7 @@ static std::string hRule(int w, const Theme &t, const BoxStyle &box)
 // ---------------------------------------------------------
 static void printHelp(const char *prog)
 {
-    std::cout << "powerls - Minimal & Powerful Terminal Directory Lister\n\n"
+    std::cout << "pls - Minimal & Powerful Terminal Directory Lister\n\n"
               << "Usage: " << prog << " [OPTIONS] [PATH]\n\n"
               << "Options:\n"
               << "  -h, --help            Show this help message and exit\n"
@@ -981,7 +981,7 @@ int main(int argc, char *argv[])
     }
     if (opts.show_version)
     {
-        std::cout << "powerls version 1.1.0\n";
+        std::cout << "pls version 1.1.0\n";
         return 0;
     }
 
